@@ -60,13 +60,34 @@ public class Main{
         // }
 
         Value v = new Value(0);
-        Lock l = new ReentrantLock();
-        Adder adder = new Adder(v, l);
-        Subtractor subtractor = new Subtractor(v, l);
+        
+        Adder adder = new Adder(v);
+        Subtractor subtractor = new Subtractor(v);
         Future<Void> adderFuture = executor.submit(adder);
         Future<Void> subtractorFuture = executor.submit(subtractor);
         adderFuture.get();
         subtractorFuture.get();
+        System.out.println(v.val);
+
+        v.val = 0;
+
+        Lock l = new ReentrantLock();
+        AdderWithLock awl = new AdderWithLock(v, l);
+        SubtractorWithLock swl = new SubtractorWithLock(v, l);
+        Future<Void> awlFuture = executor.submit(awl);
+        Future<Void> swlFuture = executor.submit(swl);
+        awlFuture.get();
+        swlFuture.get();
+        System.out.println(v.val);
+
+        v.val = 0;
+
+        SyncronizedAdder sa = new SyncronizedAdder(v);
+        SyncronizedSubtractor ss = new SyncronizedSubtractor(v);
+        Future<Void> saFuture = executor.submit(sa);
+        Future<Void> ssFuture = executor.submit(ss);
+        saFuture.get();
+        ssFuture.get();
         System.out.println(v.val);
         executor.shutdown();
     }
@@ -81,8 +102,38 @@ class Value {
 
 class Adder implements Callable<Void> {
     Value v;
+    public Adder(Value v) {
+        this.v = v;
+    }
+
+    @Override
+    public Void call() {
+        for(int i = 1; i < 10000; i++) {
+            v.val += i;
+        }
+        return null;
+    }
+}
+
+class Subtractor implements Callable<Void> {
+    Value v;
+    public Subtractor(Value v) {
+        this.v = v;
+    }
+
+    @Override
+    public Void call() {
+        for(int i = 1; i < 10000; i++) {
+            v.val -= i;
+        }
+        return null;
+    }
+}
+
+class AdderWithLock implements Callable<Void> {
+    Value v;
     Lock l;
-    public Adder(Value v, Lock l) {
+    public AdderWithLock(Value v, Lock l) {
         this.v = v;
         this.l = l;
     }
@@ -98,10 +149,10 @@ class Adder implements Callable<Void> {
     }
 }
 
-class Subtractor implements Callable<Void> {
+class SubtractorWithLock implements Callable<Void> {
     Value v;
     Lock l;
-    public Subtractor(Value v, Lock l) {
+    public SubtractorWithLock(Value v, Lock l) {
         this.v = v;
         this.l = l;
     }
@@ -116,6 +167,41 @@ class Subtractor implements Callable<Void> {
         return null;
     }
 }
+
+class SyncronizedAdder implements Callable<Void> {
+    Value v;
+    public SyncronizedAdder(Value v) { // Fix the constructor name
+        this.v = v;
+    }
+
+    @Override
+    public Void call() {
+        for (int i = 1; i < 10000; i++) {
+            synchronized (v) { // Fix the synchronized keyword
+                this.v.val += i;
+            }
+        }
+        return null;
+    }
+}
+
+class SyncronizedSubtractor implements Callable<Void> {
+    Value v;
+    public SyncronizedSubtractor(Value v) { // Fix the constructor name
+        this.v = v;
+    }
+
+    @Override
+    public Void call() {
+        for (int i = 1; i < 10000; i++) {
+            synchronized (v) { // Fix the synchronized keyword
+                this.v.val -= i;
+            }
+        }
+        return null;
+    }
+}
+
 
 class Sorter implements Callable<ArrayList<Integer>>{
     ArrayList<Integer> listToSort;

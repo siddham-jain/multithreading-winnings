@@ -1,9 +1,12 @@
+import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 
 public class Main{
-    public static void main(String[] args){
+    public static void main(String[] args) throws Exception{
         // System.out.println("Hello World");
         HelloWorldPrinter t1 = new HelloWorldPrinter();
         // t1.start();
@@ -24,10 +27,44 @@ public class Main{
         // }
 
         ExecutorService executor = Executors.newFixedThreadPool(10);
-        for(int i = 1; i<=100; i++){
-            SingleNumberPrinter s = new SingleNumberPrinter(i);
-            executor.execute(s);
+        // for(int i = 1; i<=100; i++){
+        //     SingleNumberPrinter s = new SingleNumberPrinter(i);
+        //     executor.execute(s);
+        // }
+
+        ArrayList<Integer> list = new ArrayList<Integer>();
+
+        for(int i = 0; i<10; i++){
+            list.add(i);
         }
+
+        ArrayListModifier am = new ArrayListModifier(list);
+
+        Future<ArrayList<Integer>> doubledList = executor.submit(am);
+        try {
+            System.out.println(doubledList.get());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        executor.shutdown();
+    }
+}
+
+class ArrayListModifier implements Callable<ArrayList<Integer>>{
+    ArrayList<Integer> list;
+
+    public ArrayListModifier(ArrayList<Integer> list){
+        this.list = list;
+    }
+
+    @Override
+    public ArrayList<Integer> call(){
+        ArrayList<Integer> doubledList = new ArrayList<Integer>();
+        for(int i = 0; i < list.size(); i++){
+            doubledList.add(this.list.get(i) * 2);
+        }
+        return doubledList;
     }
 }
 

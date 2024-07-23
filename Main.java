@@ -4,6 +4,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public class Main{
@@ -27,7 +29,7 @@ public class Main{
         //     th.start();
         // }
 
-        ExecutorService executor = Executors.newFixedThreadPool(5);
+        ExecutorService executor = Executors.newCachedThreadPool();
         // for(int i = 1; i<=100; i++){
         //     SingleNumberPrinter s = new SingleNumberPrinter(i);
         //     executor.execute(s);
@@ -48,16 +50,70 @@ public class Main{
         //     e.printStackTrace();
         // }
 
-        Sorter sorter = new Sorter(list);
-        Future<ArrayList<Integer>> sortedList = executor.submit(sorter);
+        // Sorter sorter = new Sorter(list);
+        // Future<ArrayList<Integer>> sortedList = executor.submit(sorter);
 
-        try {
-            System.out.println(sortedList.get());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        // try {
+        //     System.out.println(sortedList.get());
+        // } catch (InterruptedException e) {
+        //     e.printStackTrace();
+        // }
 
+        Value v = new Value(0);
+        Lock l = new ReentrantLock();
+        Adder adder = new Adder(v, l);
+        Subtractor subtractor = new Subtractor(v, l);
+        Future<Void> adderFuture = executor.submit(adder);
+        Future<Void> subtractorFuture = executor.submit(subtractor);
+        adderFuture.get();
+        subtractorFuture.get();
+        System.out.println(v.val);
         executor.shutdown();
+    }
+}
+
+class Value {
+    int val;
+    public Value(int val) {
+        this.val = val;
+    }
+}
+
+class Adder implements Callable<Void> {
+    Value v;
+    Lock l;
+    public Adder(Value v, Lock l) {
+        this.v = v;
+        this.l = l;
+    }
+
+    @Override
+    public Void call() {
+        for(int i = 1; i < 10000; i++) {
+            l.lock();
+            v.val += i;
+            l.unlock();
+        }
+        return null;
+    }
+}
+
+class Subtractor implements Callable<Void> {
+    Value v;
+    Lock l;
+    public Subtractor(Value v, Lock l) {
+        this.v = v;
+        this.l = l;
+    }
+
+    @Override
+    public Void call() {
+        for(int i = 1; i < 10000; i++) {
+            l.lock();
+            v.val -= i;
+            l.unlock();
+        }
+        return null;
     }
 }
 
@@ -83,7 +139,9 @@ class Sorter implements Callable<ArrayList<Integer>>{
         right = getSubList(listToSort, mid, listToSort.size()-1);
 
         // ExecutorService to sort two halves in parallel
-        ExecutorService executor = Executors.newFixedThreadPool(5);
+        // ExecutorService executor = Executors.newFixedThreadPool(5); it creates only 5 threads
+
+        ExecutorService executor = Executors.newCachedThreadPool(); // new cached thread pool will create new threads if needed
 
         // creating new tasks
         Sorter leftSorter = new Sorter(left);

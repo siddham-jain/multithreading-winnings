@@ -7,9 +7,14 @@ public class Main{
         // t2.start();
 
         NumberPrinter n1 = new NumberPrinter();
-        n1.start();
+        // n1.start();
         NumberPrinter n2 = new NumberPrinter();
-        n2.start();
+        // n2.start();
+
+        for(int i = 1; i<=100; i++){
+            DigitPrinter d = new DigitPrinter(i);
+            d.start();
+        }
     }
 }
 
@@ -24,6 +29,17 @@ class NumberPrinter extends Thread{
             }
             System.out.println(i + " " + Thread.currentThread().getName());
         }
+    }
+}
+
+class DigitPrinter extends Thread{
+    public int n;
+    public DigitPrinter(int n){
+        this.n = n;
+    }
+    @Override
+    public void run(){
+        System.out.println(n + " " + Thread.currentThread().getName());
     }
 }
 

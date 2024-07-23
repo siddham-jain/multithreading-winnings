@@ -13,8 +13,22 @@ public class Main{
 
         for(int i = 1; i<=100; i++){
             DigitPrinter d = new DigitPrinter(i);
-            d.start();
+            // d.start();
+            SingleNumberPrinter s = new SingleNumberPrinter(i);
+            Thread th = new Thread(s);
+            th.start();
         }
+    }
+}
+
+class SingleNumberPrinter implements Runnable{
+    public int n;
+    public SingleNumberPrinter(int n){
+        this.n = n;
+    }
+    @Override
+    public void run(){
+        System.out.println(n + " " + Thread.currentThread().getName());
     }
 }
 
